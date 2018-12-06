@@ -36,7 +36,7 @@ public class Superblock {
     to byte format and write it to disk
     */
     public void sync() {
-        byte[] tempBlock = new byte[Disk.blockSIze];
+        byte[] tempBlock = new byte[Disk.blockSize];
         
         SysLib.int2bytes(totalBlocks, tempBlock, 0);
         SysLib.int2bytes(totalInodes, tempBlock, 4);

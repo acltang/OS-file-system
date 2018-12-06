@@ -32,9 +32,9 @@ public class Inode {
         SysLib.rawread(iBlock, iInfo);
         length = SysLib.bytes2int(iInfo, offset);
         offset += 4;                             // integer is 4 bytes in size
-        count = SysLib.bytes2int(iInfo, offset);
+        count = (short)SysLib.bytes2int(iInfo, offset);
         offset += 2;                             // short is 2 bytes in size
-        flag = SysLib.bytes2int(iInfo, offset);
+        flag = (short)SysLib.bytes2int(iInfo, offset);
         offset += 2;                             // short is 2 bytes in size
         
         for (int i = 0; i < directSize; i++) {   // total 11 direct pointers
