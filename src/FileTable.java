@@ -1,27 +1,12 @@
+import java.util.Vector;
+
 public class FileTable {
 
-    public class FileTableEntry {          // Each table entry should have
-        public int seekPtr;                 //    a file seek pointer
-        public final Inode inode;           //    a reference to its inode
-        public final short iNumber;         //    this inode number
-        public int count;                   //    # threads sharing this entry
-        public final String mode;           //    "r", "w", "w+", or "a"
-        public FileTableEntry ( Inode i, short inumber, String m ) {
-            seekPtr = 0;             // the seek pointer is set to the file top
-            inode = i;
-            iNumber = inumber;
-            count = 1;               // at least on thread is using this entry
-            mode = m;                // once access mode is set, it never changes
-            if ( mode.compareTo( "a" ) == 0 ) // if mode is append,
-                seekPtr = inode.length;        // seekPtr points to the end of file
-        }
-    }
-
-    private Vector table;         // the actual entity of this file table
+    private Vector<FileTableEntry> table;         // the actual entity of this file table
     private Directory dir;        // the root directory
 
     public FileTable( Directory directory ) { // constructor
-        table = new Vector( );     // instantiate a file (structure) table
+        table = new Vector<FileTableEntry>( );     // instantiate a file (structure) table
         dir = directory;           // receive a reference to the Director
     }                             // from the file system
 
@@ -32,6 +17,35 @@ public class FileTable {
         // increment this inode's count
         // immediately write back this inode to the disk
         // return a reference to this file (structure) table entry
+        Inode inode = null;
+        short iNumber = -1;
+
+        while(true) {
+            if (filename.equals("/")) {
+                iNumber = 0;
+            }
+            else {
+                iNumber = dir.namei(filename);
+            }
+
+            if (iNumber < 0) {
+                if (mode.equals("r")) {
+                    break;
+                }
+                else {
+                    iNumber = dir.ialloc(filename);
+                    inode = new Inode(iNumber);
+                }
+            }
+        }
+
+        inode.count++;
+        inode.toDisk(iNumber);
+
+        FileTableEntry entry = new FileTableEntry(inode, iNumber, mode);
+        table.add(entry);
+
+        return entry;
     }
 
     public synchronized boolean ffree( FileTableEntry e ) {
@@ -39,6 +53,16 @@ public class FileTable {
         // save the corresponding inode to the disk
         // free this file table entry.
         // return true if this file table entry found in my table
+        if (table.remove(e)) {
+            e.inode.count--;
+            if (e.inode.count == 0) {
+                e.inode.flag = 0;
+            }
+            notifyAll();
+            e.inode.toDisk(e.iNumber);
+            return true;
+        }
+        return false;
     }
 
     public synchronized boolean fempty( ) {
