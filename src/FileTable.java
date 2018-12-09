@@ -20,21 +20,36 @@ public class FileTable {
         Inode inode = null;
         short iNumber = -1;
 
-        while(true) {
-            if (filename.equals("/")) {
-                iNumber = 0;
-            }
-            else {
-                iNumber = dir.namei(filename);
-            }
+        if (filename.equals("/")) {
+            iNumber = 0;
+        }
+        else {
+            iNumber = dir.namei(filename);
+        }
 
-            if (iNumber < 0) {
-                if (mode.equals("r")) {
+        while (true) {
+            if (mode.equals("r")) {
+                if (iNumber < 0) {
+                    return null;
+                } else {
+                    inode = new Inode(iNumber);
+                    inode.flag = 2; // flag 2 = read
+                    try {
+                        wait();
+                    } catch (Exception e) {}
                     break;
                 }
-                else {
+            } else {
+                if (iNumber < 0) {
                     iNumber = dir.ialloc(filename);
+                    inode = new Inode();
+                } else {
                     inode = new Inode(iNumber);
+                    inode.flag = 3; // flag 3 = write
+                    try {
+                        wait();
+                    } catch (Exception e) {}
+                    break;
                 }
             }
         }

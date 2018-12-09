@@ -27,27 +27,35 @@ public class FileSystem {
     void sync() {
     
     }
+
     boolean format(int files) {
         
     }
+
     FileTableEntry open(String filename, String mode) {
         
     }
+
     boolean close(FileTableEntry ftEnt) {
         
     }
+
     int fsize(FileTableEntry ftEnt) {
         
     }
+
     int read(FileTableEntry ftEnt, byte[] buffer) {
         
     }
+
     int write(FileTableEntry ftEnt, byte[] buffer) {
         
     }
+
     private boolean deallocAllBlocks(FileTableEntry ftEnt) {
         
     }
+
     boolean delete(String filename) {
         
     }
