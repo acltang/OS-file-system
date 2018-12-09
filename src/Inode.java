@@ -91,15 +91,20 @@ public class Inode {
     
     public void setDataBlock(int offset, short block){
         byte[] indirectBuf = new byte[Disk.blockSize];
+        if (offset < 0) { return -1; }
         int dirLocation = offset / Disk.blockSize;
         if (dirLocation < directSize) {
             if (direct[dirLocation] == -1){
                 direct[dirLocation] = block;
             }
-            else if (direct[dirLocation]
         }
         else if (indirect >= 0) {
-           
+            byte[] buffer = new byte[Disk.blockSize];
+            SysLib.rawread(indirect, buffer);
+            int offset = dirLocation - directSize;
+            if (SysLib.bytes2short(buffer, offset*2) <= 0) {
+                SysLib.short2bytes() 
+            }
         }
     }
 }
