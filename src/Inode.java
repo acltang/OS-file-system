@@ -9,10 +9,12 @@ public class Inode {
     public short direct[] = new short[directSize]; // direct pointers
     public short indirect;                         // a indirect pointer
     
+    public final static int ERROR = -1;
+    
     Inode( ) {                                     // a default constructor
         length = 0;
         count = 0;
-        flag = 1;
+        flag = 0;
         for ( int i = 0; i < directSize; i++ )
             direct[i] = -1;
         indirect = -1;
@@ -75,37 +77,45 @@ public class Inode {
     find the specific location of data block where direct / indirect pointers are
     heading to
     */
-    public short findDataBlock(int offset) {
+    public int findDataBlock(int offset) {
         byte[] indirectBuf = new byte[Disk.blockSize];
         int dirLocation = offset / Disk.blockSize;
         if (dirLocation < directSize) {
             return direct[dirLocation];
         }
-        else if (indirect >= 0) {
+        else if (indirect != ERROR) {
             SysLib.rawread(indirect, indirectBuf);
             int indirLocation = dirLocation - directSize;
             return SysLib.bytes2short(indirectBuf, indirLocation*2);
         }
-        return -1;
+        return ERROR;
     }
     
-    public void setDataBlock(int offset, short block){
+    public int setDataBlock(int offset, short block){
         byte[] indirectBuf = new byte[Disk.blockSize];
-        if (offset < 0) { return -1; }
+        if (offset < 0) { return ERROR; }
         int dirLocation = offset / Disk.blockSize;
         if (dirLocation < directSize) {
-            if (direct[dirLocation] == -1){
+            if (direct[dirLocation] == ERROR){
                 direct[dirLocation] = block;
+                return 0;
             }
+            else if(direct[dirLocation-1] == ERROR && dirLocation > 0){
+                return ERROR;
+            }
+            return ERROR;
         }
-        else if (indirect >= 0) {
+        else if (indirect != ERROR) {
             byte[] buffer = new byte[Disk.blockSize];
             SysLib.rawread(indirect, buffer);
             int offset = dirLocation - directSize;
             if (SysLib.bytes2short(buffer, offset*2) <= 0) {
-                SysLib.short2bytes() 
+                SysLib.short2bytes(block, buffer, offset*2);
+                SysLib.rawwrite(indirect, buffer);
+                return 0;
             }
         }
+        return ERROR;
     }
 }
 
