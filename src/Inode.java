@@ -52,6 +52,7 @@ public class Inode {
     save to disk as the i-th inode
     */
     int toDisk(short iNumber) {
+        if (iNumber < 0) { return ERROR; }
         byte[] iInfo = new byte[Disk.blockSize];
         int iBlock = (iNumber / 16) + 1;         // location of Inode in Disk blocks
         int offset = (iNumber % 16) * iNodeSize; // specific location of Inode in a block
@@ -70,6 +71,7 @@ public class Inode {
         SysLib.short2bytes(indirect, iInfo, offset); // Put indirect pointer info to buf
         offset += 2;
         SysLib.rawwrite(iBlock, iInfo); // Write iNode info back to the disk
+        return 1; 
     }
     
     /*
@@ -108,7 +110,7 @@ public class Inode {
         else if (indirect != ERROR) {
             byte[] buffer = new byte[Disk.blockSize];
             SysLib.rawread(indirect, buffer);
-            int offset = dirLocation - directSize;
+            offset = dirLocation - directSize;
             if (SysLib.bytes2short(buffer, offset*2) <= 0) {
                 SysLib.short2bytes(block, buffer, offset*2);
                 SysLib.rawwrite(indirect, buffer);
