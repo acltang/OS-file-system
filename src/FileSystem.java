@@ -70,6 +70,9 @@ public class FileSystem {
     }
     
     public synchronized boolean close(FileTableEntry ftEnt) {
+        if (ftEnt == null) {
+            return false;
+        }
         ftEnt.count--;
         if (ftEnt.count > 0) return true;
         return filetable.ffree(ftEnt);
@@ -209,7 +212,7 @@ public class FileSystem {
     private final int SEEK_END = 2;
     
     int seek(FileTableEntry ftEnt, int offset, int whence) {
-        if (whence < SEEK_SET || whence > SEEK_CUR) {
+        if (whence < SEEK_SET || whence > SEEK_CUR || ftEnt == null) {
             return -1;
         }
         switch(whence) {
