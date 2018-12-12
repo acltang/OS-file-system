@@ -63,7 +63,6 @@ public class FileSystem {
     */
     FileTableEntry open(String filename, String mode) {
         FileTableEntry entry = filetable.falloc(filename, mode);
-        System.out.println("test");
         if (mode.equals("w") && entry != null && deallocAllBlocks(entry) == false) {
             return null;
         }

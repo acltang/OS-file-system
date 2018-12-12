@@ -65,12 +65,12 @@ public class Kernel {
     // The heart of Kernel
     public static int interrupt(int irq, int cmd, int param, Object args) {
         TCB myTcb;
-        scheduler = new Scheduler();
         switch (irq) {
             case INTERRUPT_SOFTWARE: // System calls
                 switch (cmd) {
                     case BOOT:
                         // instantiate and start a scheduler
+                        scheduler = new Scheduler();
                         scheduler.start();
 
                         // instantiate and start a disk
@@ -86,7 +86,6 @@ public class Kernel {
                         filesystem = new FileSystem(1000);
                         return OK;
                     case EXEC:
-                        System.out.println("exec");
                         return sysExec((String[]) args);
                     case WAIT:
                         // get the current thread id
@@ -162,9 +161,17 @@ public class Kernel {
                                 System.out.println("threaOS: caused read errors");
                                 return ERROR;
                         }
+
+                        if (scheduler == null) {
+                            return ERROR;
+                        }
+
                         // return FileSystem.read( param, byte args[] );
-                        if ((myTcb = scheduler.getMyTcb()) != null)
-                            return filesystem.read(myTcb.getFtEnt(param), (byte[])args);
+                        if ((myTcb = scheduler.getMyTcb()) != null) {
+                            if (myTcb.getFtEnt(param) != null) {
+                                return filesystem.read(myTcb.getFtEnt(param), (byte[]) args);
+                            }
+                        }
                         return ERROR;
                     case WRITE:
                         switch (param) {
@@ -178,9 +185,15 @@ public class Kernel {
                                 System.err.print((String) args);
                                 break;
                         }
-                        // return FileSystem.read( param, byte args[] );
-                        if ((myTcb = scheduler.getMyTcb()) != null)
-                            return filesystem.read(myTcb.getFtEnt(param), (byte[])args);
+                        // return FileSystem.write( param, byte args[] );
+                        if (scheduler == null) {
+                            return ERROR;
+                        }
+                        if ((myTcb = scheduler.getMyTcb()) != null) {
+                            if (myTcb.getFtEnt(param) != null) {
+                                return filesystem.write(myTcb.getFtEnt(param), (byte[]) args);
+                            }
+                        }
                         return ERROR;
                     case CREAD:   // to be implemented in assignment 4
                         return cache.read(param, (byte[]) args) ? OK : ERROR;
