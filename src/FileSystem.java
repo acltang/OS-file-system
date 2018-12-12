@@ -13,13 +13,13 @@ public class FileSystem {
     public FileSystem(int diskBlocks) {
         //create superblock, and format disk with 64 inodes in default
         superblock = new SuperBlock(diskBlocks);
-        
+
         //create directory, and register "/" in directory entry 0
         directory = new Directory(superblock.totalInodes);
-        
+
         //file table is created, and store directory in the file table
         filetable = new FileTable(directory);
-        
+
         //directory reconstruction
         FileTableEntry dirEnt = open("/", "r");
         int dirSize = fsize(dirEnt);
@@ -63,6 +63,7 @@ public class FileSystem {
     */
     FileTableEntry open(String filename, String mode) {
         FileTableEntry entry = filetable.falloc(filename, mode);
+        System.out.println("test");
         if (mode.equals("w") && entry != null && deallocAllBlocks(entry) == false) {
             return null;
         }

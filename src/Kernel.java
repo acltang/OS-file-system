@@ -65,12 +65,12 @@ public class Kernel {
     // The heart of Kernel
     public static int interrupt(int irq, int cmd, int param, Object args) {
         TCB myTcb;
+        scheduler = new Scheduler();
         switch (irq) {
             case INTERRUPT_SOFTWARE: // System calls
                 switch (cmd) {
                     case BOOT:
                         // instantiate and start a scheduler
-                        scheduler = new Scheduler();
                         scheduler.start();
 
                         // instantiate and start a disk
@@ -86,6 +86,7 @@ public class Kernel {
                         filesystem = new FileSystem(1000);
                         return OK;
                     case EXEC:
+                        System.out.println("exec");
                         return sysExec((String[]) args);
                     case WAIT:
                         // get the current thread id

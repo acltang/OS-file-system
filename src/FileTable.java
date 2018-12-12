@@ -18,7 +18,7 @@ public class FileTable {
         // immediately write back this inode to the disk
         // return a reference to this file (structure) table entry
         Inode inode = null;
-        short iNumber = -1;
+        short iNumber;
 
         if (filename.equals("/")) {
             iNumber = 0;
@@ -29,21 +29,21 @@ public class FileTable {
 
         while (true) {
             if (mode.equals("r")) {
-                if (iNumber < 0) { // exists
+                if (iNumber < 0) { // doesn't exist
                     return null;
-                } else { // doesn't exist
+                }
+                else { // exists
+                    iNumber = dir.ialloc(filename);
                     inode = new Inode(iNumber);
                     inode.flag = 2; // flag 2 = read
-                    try {
-                        wait();
-                    } catch (Exception e) {}
                     break;
                 }
-            } else { // mode is w, w+, or a
-                if (iNumber < 0) { // exists
-                    iNumber = dir.ialloc(filename);
-                    inode = new Inode();
-                } else { // doesn't exist
+            }
+            else { // mode is w, w+, or a
+                if (iNumber < 0) { // doesn't exist
+                    return null;
+                }
+                else { // exists
                     inode = new Inode(iNumber);
                     inode.flag = 3; // flag 3 = write
                     try {
