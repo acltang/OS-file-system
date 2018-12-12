@@ -28,29 +28,32 @@ public class FileTable {
         }
 
         while (true) {
-            if (mode.equals("r")) {
-                if (iNumber < 0) { // doesn't exist
+            if (iNumber < 0) {  // file doesn't exist
+                if (mode.equals("r")) {
                     return null;
                 }
-                else { // exists
+                else { // w, w+, or a
                     iNumber = dir.ialloc(filename);
-                    inode = new Inode(iNumber);
-                    inode.flag = 2; // flag 2 = read
+                    inode = new Inode();
+                    inode.flag = 2;
                     break;
                 }
             }
-            else { // mode is w, w+, or a
-                if (iNumber < 0) { // doesn't exist
+            else { // file exists
+                inode = new Inode(iNumber);
+                if (mode.equals("r")) {
+                    if (inode.flag == 0) {
+                        inode.flag = 1; // set used
+                        break;
+                    }
+                }
+                else { // w, w+, or a
                     return null;
                 }
-                else { // exists
-                    inode = new Inode(iNumber);
-                    inode.flag = 3; // flag 3 = write
-                    try {
-                        wait();
-                    } catch (Exception e) {}
-                    break;
-                }
+                try {
+                    wait();
+                }catch (Exception e){}
+                break;
             }
         }
 

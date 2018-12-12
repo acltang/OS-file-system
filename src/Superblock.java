@@ -16,6 +16,7 @@ public class SuperBlock {
     private final static int defaultInodeBlocks = 64;
     
     public SuperBlock(int diskSize) {
+        System.out.println("Working...");
         byte[] superBlock = new byte[Disk.blockSize];    // Disk.blockSize = 512 bytes
         SysLib.rawread(0, superBlock);
         // Convert bytes of block data to integer to read
