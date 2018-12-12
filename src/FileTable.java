@@ -29,9 +29,9 @@ public class FileTable {
 
         while (true) {
             if (mode.equals("r")) {
-                if (iNumber < 0) {
+                if (iNumber < 0) { // exists
                     return null;
-                } else {
+                } else { // doesn't exist
                     inode = new Inode(iNumber);
                     inode.flag = 2; // flag 2 = read
                     try {
@@ -39,11 +39,11 @@ public class FileTable {
                     } catch (Exception e) {}
                     break;
                 }
-            } else {
-                if (iNumber < 0) {
+            } else { // mode is w, w+, or a
+                if (iNumber < 0) { // exists
                     iNumber = dir.ialloc(filename);
                     inode = new Inode();
-                } else {
+                } else { // doesn't exist
                     inode = new Inode(iNumber);
                     inode.flag = 3; // flag 3 = write
                     try {

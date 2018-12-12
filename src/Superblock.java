@@ -9,13 +9,13 @@ pointer to a list of free blocks, etc.
 -
 */
 
-public class Superblock {
+public class SuperBlock {
     public int totalBlocks;     // the number of disk blocks
     public int totalInodes;    // the number of inodes
     public int freeList;       // the block number of the free list's head
     private final static int defaultInodeBlocks = 64;
     
-    public Superblock(int diskSize) {
+    public SuperBlock(int diskSize) {
         byte[] superBlock = new byte[Disk.blockSize];    // Disk.blockSize = 512 bytes
         SysLib.rawread(0, superBlock);
         // Convert bytes of block data to integer to read
@@ -64,5 +64,33 @@ public class Superblock {
             SysLib.rawwrite(i, emptyBlock);
         }
         sync();
+    }
+
+    public int getFreeBlock() {
+        int tempList = freeList;
+        if (tempList == -1 || tempList > totalBlocks) {
+            return -1;
+        }
+
+        byte[] block = new byte[Disk.blockSize];
+        SysLib.rawread(tempList, block);
+        freeList = SysLib.bytes2int(block, 0);
+        SysLib.int2bytes(0, block, 0);
+        SysLib.rawwrite(tempList, block);
+        return tempList;
+    }
+
+    public boolean returnBlock(int block) {
+        if (block < 0 || block > totalBlocks) {
+            return false;
+        }
+        byte[] retBlock = new byte[Disk.blockSize];
+        for (int i = 0; i < Disk.blockSize; i++) {
+            retBlock[i] = 0;
+        }
+        SysLib.int2bytes(freeList, retBlock, 0);
+        SysLib.rawwrite(block, retBlock);
+        freeList = block;
+        return true;
     }
 }
