@@ -1,11 +1,6 @@
 import java.util.Vector;
 
 public class FileTable {
-    public final static int UNUSED = 0;
-    public final static int USED = 1;
-    
-    public final static int READ = 2;
-    public final static int WRITE = 3;
     
     private Vector<FileTableEntry> table;         // the actual entity of this file table
     private Directory dir;        // the root directory
@@ -31,96 +26,41 @@ public class FileTable {
         else {
             iNumber = dir.namei(filename);
         }
-        /*
-        while (true) {
-            if (iNumber < 0) {  // file doesn't exist
-                if (mode.equals("r")) {
-                    return null;
-                }
-                else { // w, w+, or a
-                    iNumber = dir.ialloc(filename);
-                    inode = new Inode();
-                    inode.flag = 2;
-                    break;
-                }
-            }
-            else { // file exists
-                inode = new Inode(iNumber);
-                if (mode.equals("r")) {
-                    if (inode.flag == 0) {
-                        inode.flag = 1; // set used
-                        break;
-                    }
-                }
-                else { // w, w+, or a
-                    return null;
-                }
-                try {
-                    wait();
-                }catch (Exception e){}
-                break;
-            }
-        }
-        */
+   
         while(true){
            if (iNumber >= 0) {
                inode = new Inode(iNumber);
-            
-               // Of r reading?
+
                if (mode.equals("r")) {
-                
-                  // Flag is unused or used or reading (No read or write to file).
-                  if ((inode.flag == UNUSED) || (inode.flag == USED) || (inode.flag == READ)) {
-                    
-                      inode.flag = READ;
-                      break;
-                  }
-                  else if (inode.flag == WRITE) { // Written by someone else. Wait until finish.
-                    
-                      try {
-                          wait();
-                      }
-                      catch (InterruptedException ex) {
-                        
-                      }
-                    
-                  }
-               }
-               else { // Writing or Writing/Reading or Appending?
-                
-                   // Flag of file used? If so, change to write
-                   if ((inode.flag == UNUSED) || (inode.flag == USED)) {
-                    
-                       inode.flag = WRITE;
+                   if (inode.flag == 3) {
+                       try { wait(); }
+                       catch (InterruptedException ex) {}
+                   }
+                   else if ((inode.flag == 0) || (inode.flag == 1) || (inode.flag == 2)) {
+                       inode.flag = 2;
                        break;
                    }
-                   else { // Flag is read or write? If so, then wait until finish.
-                    
-                       try {
-                           wait();
-                       }
-                       catch (InterruptedException ex) {
-                        
-                       }
+               }
+               else {
+                   if ((inode.flag == 0) || (inode.flag == 1)) {
+                       inode.flag = 3;
+                       break;
+                   }
+                   else {
+                       try { wait(); }
+                       catch (InterruptedException ex) {}
                    }
                 }
-            
-            
-            // If file does not have a node, create a new inode for it.
-            // Using the alloc function from directory to get the iNumber
            }
-           else if (!mode.equals("r")) {
-            
+           else if (mode.equals("r")){ return null; }
+           else {
                iNumber = dir.ialloc(filename);
                inode = new Inode(iNumber);
-               inode.flag = WRITE;
+               inode.flag = 3;
                break;
-          }
-          else {
-            
-               return null;
-          }
-    }
+           }
+        }
+        
         inode.count++;
         inode.toDisk(iNumber);
 

@@ -2,6 +2,11 @@ public class FileSystem {
     private SuperBlock superblock;
     private Directory directory;
     private FileTable filetable;
+    
+    private final int SEEK_SET = 0;
+    private final int SEEK_CUR = 1;
+    private final int SEEK_END = 2;
+    
     private final static int ERROR = -1;
 
     /*
@@ -98,20 +103,20 @@ public class FileSystem {
             int bufferLeft = buffer.length; // Size of total buffer to read in file
             int bufferRead = 0;             // Keep tracking the bytes read
             int fileLength = fsize(ftEnt);  // Size of file
-            int offset = ftEnt.seekPtr;     // Keep tracking the block to read by this seek pointer
+          
             // If seek pointer doesn't reach to the end of file and some buffer to read
             // is still left in the file
             while (ftEnt.seekPtr < fileLength && bufferLeft > 0) {
                 // To find the specific location of block through the seek pointer
-                int blockLocation = ftEnt.inode.findDataBlock(offset);
+                int blockLocation = ftEnt.inode.findDataBlock(ftEnt.seekPtr);
                 if (blockLocation == ERROR) { break; }
                 byte[] tempBuffer = new byte[Disk.blockSize];
                 // To load the block data from the disk and store in the tempBuffer
                 SysLib.rawread(blockLocation, tempBuffer);
 
-                int startingPtr = offset % Disk.blockSize;
+                int startingPtr = ftEnt.seekPtr % Disk.blockSize;
                 int blockDataLeft = Disk.blockSize - startingPtr;
-                int bufSizeToRead = Math.min(bufferLeft, Math.min(blockDataLeft,  fileLength - offset));
+                int bufSizeToRead = Math.min(bufferLeft, Math.min(blockDataLeft,  fileLength - ftEnt.seekPtr));
 
                 // To copy the data of blocks into the buffer
                 System.arraycopy(tempBuffer, startingPtr, buffer, bufferRead, bufSizeToRead);
@@ -121,7 +126,7 @@ public class FileSystem {
                 // To update the reading size of buffer after reading the file
                 bufferRead += bufSizeToRead;
                 // To update the location of seek pointer after reading the file
-                offset += bufSizeToRead;
+                ftEnt.seekPtr += bufSizeToRead;
             }
             return bufferRead;
         }
@@ -207,12 +212,11 @@ public class FileSystem {
         return directory.ifree(directory.namei(filename));
     }
     
-    private final int SEEK_SET = 0;
-    private final int SEEK_CUR = 1;
-    private final int SEEK_END = 2;
-    
     int seek(FileTableEntry ftEnt, int offset, int whence) {
-        if (whence < SEEK_SET || whence > SEEK_CUR || ftEnt == null) {
+      //  if (whence < SEEK_SET || whence > SEEK_CUR || ftEnt == null) {
+      //      return -1;
+      //  }
+        if (ftEnt == null) {
             return -1;
         }
         switch(whence) {
