@@ -1,7 +1,12 @@
 import java.util.Vector;
 
 public class FileTable {
-
+    public final static int UNUSED = 0;
+    public final static int USED = 1;
+    
+    public final static int READ = 2;
+    public final static int WRITE = 3;
+    
     private Vector<FileTableEntry> table;         // the actual entity of this file table
     private Directory dir;        // the root directory
 
@@ -26,7 +31,7 @@ public class FileTable {
         else {
             iNumber = dir.namei(filename);
         }
-
+        /*
         while (true) {
             if (iNumber < 0) {  // file doesn't exist
                 if (mode.equals("r")) {
@@ -56,7 +61,66 @@ public class FileTable {
                 break;
             }
         }
-
+        */
+        while(true){
+           if (iNumber >= 0) {
+               inode = new Inode(iNumber);
+            
+               // Of r reading?
+               if (mode.equals("r")) {
+                
+                  // Flag is unused or used or reading (No read or write to file).
+                  if ((inode.flag == UNUSED) || (inode.flag == USED) || (inode.flag == READ)) {
+                    
+                      inode.flag = READ;
+                      break;
+                  }
+                  else if (inode.flag == WRITE) { // Written by someone else. Wait until finish.
+                    
+                      try {
+                          wait();
+                      }
+                      catch (InterruptedException ex) {
+                        
+                      }
+                    
+                  }
+               }
+               else { // Writing or Writing/Reading or Appending?
+                
+                   // Flag of file used? If so, change to write
+                   if ((inode.flag == UNUSED) || (inode.flag == USED)) {
+                    
+                       inode.flag = WRITE;
+                       break;
+                   }
+                   else { // Flag is read or write? If so, then wait until finish.
+                    
+                       try {
+                           wait();
+                       }
+                       catch (InterruptedException ex) {
+                        
+                       }
+                   }
+                }
+            
+            
+            // If file does not have a node, create a new inode for it.
+            // Using the alloc function from directory to get the iNumber
+           }
+           else if (!mode.equals("r")) {
+            
+               iNumber = dir.ialloc(filename);
+               inode = new Inode(iNumber);
+               inode.flag = WRITE;
+               break;
+          }
+          else {
+            
+               return null;
+          }
+    }
         inode.count++;
         inode.toDisk(iNumber);
 
